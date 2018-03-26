@@ -4,11 +4,13 @@ public class PlayerSkeleton {
 	//implement this function to have a working system
 	public int pickMove(State s, int[][] legalMoves) {
 		
+		ai.pickMove(s, legalMoves);
 		return 0;
 	}
 	
 	public static void main(String[] args) {
 		State s = new State();
+		Ai ai = new Ai();
 		new TFrame(s);
 		PlayerSkeleton p = new PlayerSkeleton();
 		while(!s.hasLost()) {
