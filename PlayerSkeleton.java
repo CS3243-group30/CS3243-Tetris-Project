@@ -166,10 +166,10 @@ public class PlayerSkeleton {
 
 	public class Ai {
 
-		public static final double totalHeightWeight = -0.5;
-		public static final double maxHeightWeight = -0.5;
+		public static final double totalHeightWeight = -0.6;
+		public static final double maxHeightWeight = -0.6;
 		public static final double linesCompletedWeight = 0.7;
-		public static final double holesWeight = 0.0;
+		public static final double holesWeight = -0.2;
 		public static final double absTotalDifferenceHeightWeight = 0.0;
 	
 		private void trainAi() {
@@ -188,11 +188,13 @@ public class PlayerSkeleton {
 	
 			//Calculate number of Completed Lines in the state
 			int numLines = completedLines(nextState);
+
+			//Calculate number of holes in the grid
+			int numHoles = calculateHoles(nextState);
 	
-			score = totalHeight * totalHeightWeight + maxHeight * maxHeightWeight + numLines * linesCompletedWeight
-					;
-	
-			return score;
+			return totalHeight * totalHeightWeight + maxHeight * maxHeightWeight + numLines * linesCompletedWeight +
+					numHoles * holesWeight;
+
 		}
 	
 		//Calculates the total height of all the coloums
@@ -215,8 +217,8 @@ public class PlayerSkeleton {
 				totalHeight += currentColHeight;
 			}
 	
-			System.out.print("HEIGHT: ");
-			System.out.println(totalHeight);
+			// System.out.print("HEIGHT: ");
+			// System.out.println(totalHeight);
 			return totalHeight;
 		}
 	
@@ -236,7 +238,6 @@ public class PlayerSkeleton {
 					max = currentColHeight;
 				}
 			}
-	
 			return max;
 		}
 	
@@ -257,6 +258,25 @@ public class PlayerSkeleton {
 				}
 			}
 			return true;
+		}
+
+		public int calculateHoles(int[][] nextState) {
+			int numHoles = 0;
+			for(int i = 0; i < State.COLS; i++) {
+				boolean isHole = false;
+				for(int j = 0; j < State.ROWS; j++) {
+					if(nextState[j][i] == 0) {
+						isHole = true;
+					}
+					else if(nextState[j][i] != 0 && isHole) {
+						numHoles++;
+						isHole = false;
+					}
+				}
+			}
+			System.out.print("Number of holes: ");
+			System.out.println(numHoles);
+			return numHoles;
 		}
 		
 	}
