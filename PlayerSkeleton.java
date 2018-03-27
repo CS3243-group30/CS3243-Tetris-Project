@@ -166,11 +166,11 @@ public class PlayerSkeleton {
 
 	public class Ai {
 
-		public double totalHeightWeight = -0.5;
+		public double totalHeightWeight = -0.6;
 		public double maxHeightWeight = -0.5;
 		public double linesCompletedWeight = 0.3;
-		public double holesWeight = -0.7;
-		public double absTotalDifferenceHeightWeight = -0.1;
+		public double holesWeight = -0.5;
+		public double absTotalDifferenceHeightWeight = -0.2;
 	
 		private void trainAi() {
 			Ai candidate = new Ai();
