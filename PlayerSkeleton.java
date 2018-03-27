@@ -1,8 +1,10 @@
 import java.util.Arrays;
 
 public class PlayerSkeleton {
-	public static final int COLS = 10;
-	public static final int ROWS = 21;
+	public static final int COLS = State.COLS;
+	public static final int ROWS = State.ROWS;
+
+	Ai ai = new Ai();
 
 	//implement this function to have a working system
 	public int pickMove(State s, int[][] legalMoves) {
@@ -36,18 +38,19 @@ public class PlayerSkeleton {
 			int [][] nextState = new int[ROWS][COLS];
 
 			for(int a = 0; a < currentField.length; a++) {
-    		nextState[a] = currentField[a].clone();
+    			nextState[a] = currentField[a].clone();
 			}
 
 			int [] topClone = new int[top.length];
 			topClone = top.clone();
 
-			nextState = makeMove(turn,topClone, allPHeight, allPWidth, allPTop, allPBottom, nextPiece, nextState, legalMoves[i][0], legalMoves[i][1]);
+			nextState = tryMove(turn,topClone, allPHeight, allPWidth, allPTop, allPBottom, nextPiece, nextState, legalMoves[i][0], legalMoves[i][1]);
 
 			//Calculate current score for the state
-			scoreArray[i] = calculateScore(nextState);
+			scoreArray[i] = ai.calculateScore(nextState);
 		}
 
+		//Pick the move with the highest score
 		double highestScore = scoreArray[0];
 		int bestMoveIndex = 0;
 		for(int i = 0; i < scoreArray.length; i++){
@@ -56,11 +59,13 @@ public class PlayerSkeleton {
 				bestMoveIndex = i;
 			}
 		}
+
+		//Return the move
 		return bestMoveIndex;
 	}
 
 	//This method is taken from the State.java class
-	public int[][] makeMove(int turn, int[] top, int[][] pHeight, int[][]pWidth, int[][][] pTop, int[][][] pBottom, int nextPiece, int [][] field, int orient, int slot) {
+	public int[][] tryMove(int turn, int[] top, int[][] pHeight, int[][]pWidth, int[][][] pTop, int[][][] pBottom, int nextPiece, int [][] field, int orient, int slot) {
 		turn++;
 		//height if the first column makes contact
 		int height = top[slot]-pBottom[nextPiece][orient][0];
@@ -127,11 +132,10 @@ public class PlayerSkeleton {
 			}
 		}
 
-
 		printField(field);
 
 		return field;
-		}
+	}
 
 	//This method is to print the current field
 	public void printField(int [][] field) {
@@ -143,45 +147,8 @@ public class PlayerSkeleton {
 		System.out.println(Arrays.deepToString(printField).replace("], ", "]\n"));
 	}
 
-	//This method is to calculate the score for the next state
-	public double calculateScore(int[][] nextState) {
-		double score = 0;
-		double heightWeight = -0.5; //to be changed
-		//Calculate Height
-		int height = checkHeight(nextState);
-
-		score = height * heightWeight;
-
-		return score;
-	}
-
-	public int checkHeight(int[][] nextState) {
-		int totalHeight = 0;
-		int currentColHeight = 0;
-		for(int i = 0; i < COLS; i++) {
-			currentColHeight = 0;
-			for(int j = 0; j < ROWS; j++) {
-
-				if(nextState[j][i] != 0) {
-					currentColHeight = j + 1;
-					// System.out.print(i);
-					// System.out.print(" , ");
-					// System.out.print(j);
-					// System.out.println();
-				}
-			}
-			// System.out.println(currentColHeight);
-			totalHeight += currentColHeight;
-		}
-
-		System.out.println("HEIGHT: ");
-		System.out.println(totalHeight);
-		return totalHeight;
-	}
-
 	public static void main(String[] args) {
 		State s = new State();
-		Ai ai = new Ai();
 		new TFrame(s);
 		PlayerSkeleton p = new PlayerSkeleton();
 		while(!s.hasLost()) {
@@ -189,12 +156,109 @@ public class PlayerSkeleton {
 			s.draw();
 			s.drawNext(0,0);
 			try {
-				Thread.sleep(300);
+				Thread.sleep(100);
 			} catch (InterruptedException e) {
 				e.printStackTrace();
 			}
 		}
 		System.out.println("You have completed "+s.getRowsCleared()+" rows.");
+	}
+
+	public class Ai {
+
+		public static final double totalHeightWeight = -0.5;
+		public static final double maxHeightWeight = -0.5;
+		public static final double linesCompletedWeight = 0.7;
+		public static final double holesWeight = 0.0;
+		public static final double absTotalDifferenceHeightWeight = 0.0;
+	
+		private void trainAi() {
+			
+		}
+	
+		//This method is to calculate the score for the next state
+		public double calculateScore(int[][] nextState) {
+			double score = 0;
+	
+			//Calculate Total Height
+			int totalHeight = checkHeight(nextState);
+	
+			//Calculate Max Height
+			int maxHeight = calculateMaxHeight(nextState);
+	
+			//Calculate number of Completed Lines in the state
+			int numLines = completedLines(nextState);
+	
+			score = totalHeight * totalHeightWeight + maxHeight * maxHeightWeight + numLines * linesCompletedWeight
+					;
+	
+			return score;
+		}
+	
+		//Calculates the total height of all the coloums
+		public int checkHeight(int[][] nextState) {
+			int totalHeight = 0;
+			int currentColHeight = 0;
+			for(int i = 0; i < State.COLS; i++) {
+				currentColHeight = 0;
+				for(int j = 0; j < State.ROWS; j++) {
+	
+					if(nextState[j][i] != 0) {
+						currentColHeight = j + 1;
+						// System.out.print(i);
+						// System.out.print(" , ");
+						// System.out.print(j);
+						// System.out.println();
+					}
+				}
+				// System.out.println(currentColHeight);
+				totalHeight += currentColHeight;
+			}
+	
+			System.out.print("HEIGHT: ");
+			System.out.println(totalHeight);
+			return totalHeight;
+		}
+	
+		//Calculates the maximum height of all the coloums
+		public int calculateMaxHeight(int[][] nextState) {
+			int max = 0;
+			int currentColHeight = 0;
+			for(int i = 0; i < State.COLS; i++) {
+				currentColHeight = 0;
+				for(int j = 0; j < State.ROWS; j++) {
+	
+					if(nextState[j][i] != 0) {
+						currentColHeight = j + 1;
+					}
+				}
+				if(currentColHeight > max) {
+					max = currentColHeight;
+				}
+			}
+	
+			return max;
+		}
+	
+		public int completedLines(int[][] nextState) {
+			int lines = 0;
+			for(int i = 0; i < State.ROWS; i++) {
+				if(isLine(i, nextState)) {
+					lines++;
+				}
+			}
+			return lines;
+		}
+	
+		private boolean isLine(int row, int[][] nextState) {
+			for(int i = 0; i < State.COLS; i++) {
+				if(nextState[row][i] == 0) {
+					return false;
+				}
+			}
+			return true;
+		}
+		
 	}
 
 }
