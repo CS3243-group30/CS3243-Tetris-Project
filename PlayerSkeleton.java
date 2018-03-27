@@ -170,7 +170,7 @@ public class PlayerSkeleton {
 		public static final double maxHeightWeight = -0.6;
 		public static final double linesCompletedWeight = 0.7;
 		public static final double holesWeight = -0.2;
-		public static final double absTotalDifferenceHeightWeight = 0.0;
+		public static final double absTotalDifferenceHeightWeight = -0.1;
 	
 		private void trainAi() {
 			
@@ -191,9 +191,12 @@ public class PlayerSkeleton {
 
 			//Calculate number of holes in the grid
 			int numHoles = calculateHoles(nextState);
+
+			//Calculate absolute height difference
+			int absTotalHeightDiff = calculateAbsDiff(nextState);
 	
 			return totalHeight * totalHeightWeight + maxHeight * maxHeightWeight + numLines * linesCompletedWeight +
-					numHoles * holesWeight;
+					numHoles * holesWeight + absTotalHeightDiff * absTotalDifferenceHeightWeight;
 
 		}
 	
@@ -277,6 +280,20 @@ public class PlayerSkeleton {
 			System.out.print("Number of holes: ");
 			System.out.println(numHoles);
 			return numHoles;
+		}
+
+		public int calculateAbsDiff(int[][] nextState) {
+			int value = 0;
+			for(int i = 0; i < State.COLS - 1; i++) {
+				value += Math.abs(columnHeight(i, nextState) - columnHeight(i+1, nextState));
+			}
+			return value;
+		}
+
+		private int columnHeight(int column, int[][] nextState) {
+			int count = 0;
+			for(; count < State.ROWS && nextState[count][column] == 0; count++);
+			return count;
 		}
 		
 	}
