@@ -11,8 +11,8 @@ public class PlayerSkeleton {
 		State currentState = s;
 
 		int [][] currentField = currentState.getField();
-		System.out.println("CURRENT STATE: ");
-		printField(currentField);
+		// System.out.println("CURRENT STATE: ");
+		// printField(currentField);
 
 
 		int nextPiece = currentState.getNextPiece();
@@ -22,14 +22,14 @@ public class PlayerSkeleton {
 		int [][][] allPBottom = currentState.getpBottom();
 		int turn = currentState.getTurnNumber();
 		int [] top = currentState.getTop();
-		System.out.println("TOP : ");
-		System.out.println(Arrays.toString(top));
+		// System.out.println("TOP : ");
+		// System.out.println(Arrays.toString(top));
 
-		System.out.println(nextPiece);
+		// System.out.println(nextPiece);
 
-		System.out.println("Legal Moves:");
-		System.out.println(Arrays.deepToString(legalMoves));
-		System.out.println(legalMoves.length);
+		// System.out.println("Legal Moves:");
+		// System.out.println(Arrays.deepToString(legalMoves));
+		// System.out.println(legalMoves.length);
 
 		double [] scoreArray = new double[legalMoves.length];
 		for(int i = 0; i < legalMoves.length; i++) {
@@ -156,7 +156,7 @@ public class PlayerSkeleton {
 			s.draw();
 			s.drawNext(0,0);
 			try {
-				Thread.sleep(100);
+				Thread.sleep(50);
 			} catch (InterruptedException e) {
 				e.printStackTrace();
 			}
@@ -169,7 +169,7 @@ public class PlayerSkeleton {
 		public static final double totalHeightWeight = -0.6;
 		public static final double maxHeightWeight = -0.6;
 		public static final double linesCompletedWeight = 0.7;
-		public static final double holesWeight = -0.2;
+		public static final double holesWeight = -0.3;
 		public static final double absTotalDifferenceHeightWeight = -0.1;
 	
 		private void trainAi() {
@@ -277,8 +277,8 @@ public class PlayerSkeleton {
 					}
 				}
 			}
-			System.out.print("Number of holes: ");
-			System.out.println(numHoles);
+			// System.out.print("Number of holes: ");
+			// System.out.println(numHoles);
 			return numHoles;
 		}
 
