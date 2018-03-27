@@ -166,14 +166,35 @@ public class PlayerSkeleton {
 
 	public class Ai {
 
-		public static final double totalHeightWeight = -0.6;
-		public static final double maxHeightWeight = -0.6;
-		public static final double linesCompletedWeight = 0.7;
-		public static final double holesWeight = -0.3;
-		public static final double absTotalDifferenceHeightWeight = -0.1;
+		public double totalHeightWeight = -0.5;
+		public double maxHeightWeight = -0.5;
+		public double linesCompletedWeight = 0.3;
+		public double holesWeight = -0.7;
+		public double absTotalDifferenceHeightWeight = -0.1;
 	
 		private void trainAi() {
-			
+			Ai candidate = new Ai();
+
+			candidate.totalHeightWeight = Math.random() - 0.5;
+			candidate.maxHeightWeight = Math.random() - 0.5;
+			candidate.linesCompletedWeight = Math.random() - 0.5;
+			candidate.holesWeight = Math.random() - 0.5;
+			candidate.absTotalDifferenceHeightWeight = Math.random() - 0.5;
+
+			normalize(candidate);
+
+		}
+
+		private void normalize(Ai candidate) {
+			double norm = Math.sqrt(candidate.totalHeightWeight * candidate.totalHeightWeight + candidate.maxHeightWeight * candidate.maxHeightWeight 
+			+ candidate.linesCompletedWeight * candidate.linesCompletedWeight + candidate.holesWeight * candidate.holesWeight 
+			+ candidate.absTotalDifferenceHeightWeight * candidate.absTotalDifferenceHeightWeight);
+
+			candidate.totalHeightWeight /= norm;
+			candidate.maxHeightWeight /= norm;
+			candidate.linesCompletedWeight /= norm;
+			candidate.holesWeight /= norm;
+			candidate.absTotalDifferenceHeightWeight /= norm;
 		}
 	
 		//This method is to calculate the score for the next state
