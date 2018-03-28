@@ -173,28 +173,9 @@ public class PlayerSkeleton {
 		public double absTotalDifferenceHeightWeight = -0.2;
 	
 		private void trainAi() {
-			Ai candidate = new Ai();
+			AiCandidate candidate = new AiCandidate();
+			candidate.normalize();
 
-			candidate.totalHeightWeight = Math.random() - 0.5;
-			candidate.maxHeightWeight = Math.random() - 0.5;
-			candidate.linesCompletedWeight = Math.random() - 0.5;
-			candidate.holesWeight = Math.random() - 0.5;
-			candidate.absTotalDifferenceHeightWeight = Math.random() - 0.5;
-
-			normalize(candidate);
-
-		}
-
-		private void normalize(Ai candidate) {
-			double norm = Math.sqrt(candidate.totalHeightWeight * candidate.totalHeightWeight + candidate.maxHeightWeight * candidate.maxHeightWeight 
-			+ candidate.linesCompletedWeight * candidate.linesCompletedWeight + candidate.holesWeight * candidate.holesWeight 
-			+ candidate.absTotalDifferenceHeightWeight * candidate.absTotalDifferenceHeightWeight);
-
-			candidate.totalHeightWeight /= norm;
-			candidate.maxHeightWeight /= norm;
-			candidate.linesCompletedWeight /= norm;
-			candidate.holesWeight /= norm;
-			candidate.absTotalDifferenceHeightWeight /= norm;
 		}
 	
 		//This method is to calculate the score for the next state
@@ -317,6 +298,34 @@ public class PlayerSkeleton {
 			return count;
 		}
 		
+	}
+
+	public class AiCandidate {
+		public double totalHeightWeight;
+		public double maxHeightWeight;
+		public double linesCompletedWeight;
+		public double holesWeight;
+		public double absTotalDifferenceHeightWeight;
+
+		public AiCandidate() {
+			this.totalHeightWeight = Math.random() - 0.5;
+			this.maxHeightWeight = Math.random() - 0.5;
+			this.linesCompletedWeight = Math.random() - 0.5;
+			this.holesWeight = Math.random() - 0.5;
+			this.absTotalDifferenceHeightWeight = Math.random() - 0.5;
+		}
+
+		private void normalize() {
+			double norm = Math.sqrt(this.totalHeightWeight * this.totalHeightWeight + this.maxHeightWeight * this.maxHeightWeight 
+			+ this.linesCompletedWeight * this.linesCompletedWeight + this.holesWeight * this.holesWeight 
+			+ this.absTotalDifferenceHeightWeight * this.absTotalDifferenceHeightWeight);
+
+			this.totalHeightWeight /= norm;
+			this.maxHeightWeight /= norm;
+			this.linesCompletedWeight /= norm;
+			this.holesWeight /= norm;
+			this.absTotalDifferenceHeightWeight /= norm;
+		}
 	}
 
 }
