@@ -7,7 +7,7 @@ public class PlayerSkeleton {
 	public static final int COLS = State.COLS;
 	public static final int ROWS = State.ROWS;
 	
-	Ai ai;
+	Ai ai = new Ai();
 
 	//implement this function to have a working system
 	public int pickMove(State s, int[][] legalMoves, Ai ai) {
@@ -160,11 +160,27 @@ public class PlayerSkeleton {
 		
 		AiGeneticTrainer trainer = skele.new AiGeneticTrainer();
 		trainer.startTrain(5000);
+		// State s = new State();
+		// new TFrame(s);
+		// PlayerSkeleton p = new PlayerSkeleton();
+		// while(!s.hasLost()) {
+		// 	s.makeMove(p.pickMove(s,s.legalMoves(),p.ai));
+		// 	s.draw();
+		// 	s.drawNext(0,0);
+		// 	try {
+		// 		Thread.sleep(30);
+		// 	} catch (InterruptedException e) {
+		// 		e.printStackTrace();
+		// 	}
+		// }
+		// System.out.println("You have completed "+s.getRowsCleared()+" rows.");
 	}
 	
 	public class Ai {
+		public double uniqueID;
 		public double totalHeightWeight;
 		public double maxHeightWeight;
+		public double relativeHeightWeight;
 		public double linesCompletedWeight;
 		public double holesWeight;
 		public double absTotalDifferenceHeightWeight;
@@ -175,22 +191,26 @@ public class PlayerSkeleton {
 		public Ai() {
 			score = 0;
 			
-			totalHeightWeight = -0.04668941679622196;
-			maxHeightWeight = 0.08267581078852104;
-			linesCompletedWeight = -0.6200597076466541;
-			holesWeight = -0.8938322611600502;
-			absTotalDifferenceHeightWeight = -0.18149214474086928;
+			uniqueID = Math.random();
+			totalHeightWeight = -0.01693979306575355;
+			maxHeightWeight = 0.12307879867607197;
+			relativeHeightWeight = -0.06086013817658331;
+			linesCompletedWeight = -0.3529339413572512;
+			holesWeight = -0.3695737041508783;
+			absTotalDifferenceHeightWeight = -0.07921627617713911;
 		}
 		
 		//Creating an AI with given weights mainly for learning process.
-		public Ai(double a, double b, double c, double d, double e) {
+		public Ai(double a, double b, double c, double d, double e, double f) {
 			score = 0;
 			
+			uniqueID = Math.random();
 			totalHeightWeight = a;
 			maxHeightWeight = b;
-			linesCompletedWeight = c;
-			holesWeight = d;
-			absTotalDifferenceHeightWeight = e;
+			relativeHeightWeight = c;
+			linesCompletedWeight = d;
+			holesWeight = e;
+			absTotalDifferenceHeightWeight = f;
 		}
 		
 		//This method is to calculate the score for the next state
@@ -201,6 +221,9 @@ public class PlayerSkeleton {
 	
 			//Calculate Max Height
 			int maxHeight = calculateMaxHeight(nextState);
+
+			//Calculate Relative Height
+			int relativeHeight = calculateRelativeHeight(nextState);
 	
 			//Calculate number of Completed Lines in the state
 			int numLines = completedLines(nextState);
@@ -211,8 +234,9 @@ public class PlayerSkeleton {
 			//Calculate absolute height difference
 			int absTotalHeightDiff = calculateAbsDiff(nextState);
 	
-			return totalHeight * totalHeightWeight + maxHeight * maxHeightWeight + numLines * linesCompletedWeight +
-				numHoles * holesWeight + absTotalHeightDiff * absTotalDifferenceHeightWeight;
+			return totalHeight * this.totalHeightWeight + maxHeight * this.maxHeightWeight + 
+				+ relativeHeight * this.relativeHeightWeight + numLines * this.linesCompletedWeight +
+					numHoles * this.holesWeight + absTotalHeightDiff * this.absTotalDifferenceHeightWeight;
 		}
 		
 		public int getColHeight(int[][] nextState, int col) {
@@ -249,6 +273,23 @@ public class PlayerSkeleton {
 				}
 			}
 			return max;
+		}
+
+		public int calculateRelativeHeight(int[][] nextState) {
+			int max = 0;
+			int min = 0;
+			int currentColHeight = 0;
+			for(int i = 0; i < State.COLS; i++) {
+				currentColHeight = getColHeight(nextState, i);
+				if(currentColHeight > max) {
+					max = currentColHeight;
+				}
+				if(i==0) min = currentColHeight;
+				if(currentColHeight < min) {
+					min = currentColHeight;
+				}
+			}
+			return max - min;
 		}
 		
 		public int completedLines(int[][] nextState) {
@@ -304,7 +345,7 @@ public class PlayerSkeleton {
 		}
 		
 		public double randomWeight() {
-			return Math.random()*2 - 1;
+			return Math.random()-0.5; //*2 - 1
 		}
 		
 		//Function for training AI
@@ -325,9 +366,11 @@ public class PlayerSkeleton {
 			//Let's all of them play
 			for (int i = 0; i < 100; i++) {
 				generation[i].score = playgame(generation[i]);
-				int secondTry = playgame(generation[i]);
-				if (secondTry > generation[i].score) {
-					generation[i].score = secondTry;
+				for(int j = 0; j < 5; j++) { // try 5 times
+					int secondTry = playgame(generation[i]);
+					if (secondTry > generation[i].score) {
+						generation[i].score = secondTry;
+					}
 				}
 			}
 			
@@ -338,10 +381,10 @@ public class PlayerSkeleton {
 				System.out.println(" ");
 				
 				//Create 30 children
-				Ai[] nextgen = new Ai[30];
+				Ai[] nextgen = new Ai[50];
 				
 				//Randomly select 10 AI from population to have a tournament to see which among the 10 is the best and the 2 best would be used to make children
-				for (int i = 0; i < 30; i++) {
+				for (int i = 0; i < 50; i++) {
 					Ai[] tourney = selector(generation);
 					Arrays.sort(tourney, aiSorter);
 					nextgen[i] = mergeAi(tourney[9], tourney[8]);
@@ -352,16 +395,25 @@ public class PlayerSkeleton {
 				printScore(generation);
 				
 				//the 30 worst Ai within the population would get replaced by children
-				for (int i = 0; i < 30; i++) {
+				for (int i = 0; i < 50; i++) {
 					generation[i] = nextgen[i];
 				}
 				
 				//play again to get the score for this new population
+				// for (int i = 0; i < 100; i++) {
+				// 	generation[i].score = playgame(generation[i]);
+				// 	int secondTry = playgame(generation[i]);
+				// 	if (secondTry > generation[i].score) {
+				// 		generation[i].score = secondTry;
+				// 	}
+				// }
 				for (int i = 0; i < 100; i++) {
 					generation[i].score = playgame(generation[i]);
-					int secondTry = playgame(generation[i]);
-					if (secondTry > generation[i].score) {
-						generation[i].score = secondTry;
+					for(int j = 0; j < 5; j++) { // try 5 times
+						int secondTry = playgame(generation[i]);
+						if (secondTry > generation[i].score) {
+							generation[i].score = secondTry;
+						}
 					}
 				}
 
@@ -375,8 +427,11 @@ public class PlayerSkeleton {
 			}
 			System.out.println(" ");
 			
-			System.out.println("totalHeightWeight = " + toprint[99].totalHeightWeight 
+			System.out.println("ID for top AI is: " + toprint[99].uniqueID 
+			+ "\nScore = " + toprint[99].score 
+			+ "\ntotalHeightWeight = " + toprint[99].totalHeightWeight 
 			+ "\nmaxHeightWeight = " + toprint[99].maxHeightWeight
+			+ "\nrelativeHeightWeight = " + toprint[99].relativeHeightWeight
 			+ "\nlinesCompletedWeight = " + toprint[99].linesCompletedWeight
 			+ "\nholesWeight = " + toprint[99].holesWeight
 			+ "\nabsTotalDifferenceHeightWeight = " + toprint[99].absTotalDifferenceHeightWeight);
@@ -385,26 +440,45 @@ public class PlayerSkeleton {
 		//Creates a child Ai where the values are based off parents
 		//There is a 5% chance that 1 of the herustic would be mutated and become random
 		//Otherwise it takes the value in between the 2 parent leaning slightly to the better one.
+		// public Ai mergeAi(Ai dad, Ai mom) {
+		// 	return new Ai(mergeValue(dad.totalHeightWeight, mom.totalHeightWeight, dad.score, mom.score),
+		// 			mergeValue(dad.maxHeightWeight, mom.maxHeightWeight, dad.score, mom.score),
+		// 			mergeValue(dad.linesCompletedWeight, mom.linesCompletedWeight, dad.score, mom.score),
+		// 			mergeValue(dad.holesWeight, mom.holesWeight, dad.score, mom.score),
+		// 			mergeValue(dad.absTotalDifferenceHeightWeight, mom.absTotalDifferenceHeightWeight, dad.score, mom.score));
+		// }
+		
+		// public double mergeValue(double x, double y, double scorex, double scorey) {
+		// 	double mutate = Math.random();
+		// 	if (mutate > 0.95) {
+		// 		return randomWeight();
+		// 	}
+			
+		// 	double lean = ((scorex - scorey)/scorex)/2 + 0.5;
+		// 	return x*lean + y*(1-lean);
+		// }
+
+		//Alternate merging which picks either mom or dad value with 50 /50 chance
 		public Ai mergeAi(Ai dad, Ai mom) {
-			return new Ai(mergeValue(dad.totalHeightWeight, mom.totalHeightWeight, dad.score, mom.score),
-					mergeValue(dad.maxHeightWeight, mom.maxHeightWeight, dad.score, mom.score),
-					mergeValue(dad.linesCompletedWeight, mom.linesCompletedWeight, dad.score, mom.score),
-					mergeValue(dad.holesWeight, mom.holesWeight, dad.score, mom.score),
-					mergeValue(dad.absTotalDifferenceHeightWeight, mom.absTotalDifferenceHeightWeight, dad.score, mom.score));
+			return new Ai(mergeValue(dad.totalHeightWeight, mom.totalHeightWeight),
+					mergeValue(dad.maxHeightWeight, mom.maxHeightWeight),
+					mergeValue(dad.relativeHeightWeight, mom.relativeHeightWeight),
+					mergeValue(dad.linesCompletedWeight, mom.linesCompletedWeight),
+					mergeValue(dad.holesWeight, mom.holesWeight),
+					mergeValue(dad.absTotalDifferenceHeightWeight, mom.absTotalDifferenceHeightWeight));
 		}
 		
-		public double mergeValue(double x, double y, double scorex, double scorey) {
+		public double mergeValue(double x, double y) {
 			double mutate = Math.random();
-			if (mutate > 0.95) {
+			if (mutate < 0.1) {
 				return randomWeight();
 			}
 			
-			double lean = ((scorex - scorey)/scorex)/2 + 0.5;
-			return x*lean + y*(1-lean);
+			return (Math.random() >= 0.5) ? x : y ;
 		}
 		
 		public Ai getRandomAi() {
-			return new Ai(randomWeight(), randomWeight(), randomWeight(), randomWeight(), randomWeight());
+			return new Ai(randomWeight(), randomWeight(), randomWeight(), randomWeight(), randomWeight(), randomWeight());
 		}
 		
 		//Selects 10 Ai out of the given population of 100
