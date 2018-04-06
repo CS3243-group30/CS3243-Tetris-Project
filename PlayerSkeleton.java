@@ -2,6 +2,7 @@ import java.awt.List;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Comparator;
+import java.util.Random;
 
 public class PlayerSkeleton {
 	public static final int COLS = State.COLS;
@@ -45,14 +46,14 @@ public class PlayerSkeleton {
 		}
 		
 		//Pick the move with the highest score
-				double highestScore = scoreArray[0];
-				int bestMoveIndex = 0;
-				for(int i = 0; i < scoreArray.length; i++){
-					if(scoreArray[i] > highestScore) {
-						highestScore = scoreArray[i];
-						bestMoveIndex = i;
-					}
-				}
+		double highestScore = scoreArray[0];
+		int bestMoveIndex = 0;
+		for(int i = 0; i < scoreArray.length; i++){
+			if(scoreArray[i] > highestScore) {
+				highestScore = scoreArray[i];
+				bestMoveIndex = i;
+			}
+		}
 
 		//Return the move
 		return bestMoveIndex;
@@ -204,13 +205,13 @@ public class PlayerSkeleton {
 		public Ai(double a, double b, double c, double d, double e, double f) {
 			score = 0;
 			
-			uniqueID = Math.random();
-			totalHeightWeight = a;
-			maxHeightWeight = b;
-			relativeHeightWeight = c;
-			linesCompletedWeight = d;
-			holesWeight = e;
-			absTotalDifferenceHeightWeight = f;
+			this.uniqueID = Math.random();
+			this.totalHeightWeight = a;
+			this.maxHeightWeight = b;
+			this.relativeHeightWeight = c;
+			this.linesCompletedWeight = d;
+			this.holesWeight = e;
+			this.absTotalDifferenceHeightWeight = f;
 		}
 		
 		//This method is to calculate the score for the next state
@@ -380,11 +381,13 @@ public class PlayerSkeleton {
 				System.out.println("Generation number: " + repeat);
 				System.out.println(" ");
 				
-				//Create 30 children
+				//Create 50 children
 				Ai[] nextgen = new Ai[50];
-				
+				//Keep the winning candidate no matter what
+				nextgen[0] = generation[99];
 				//Randomly select 10 AI from population to have a tournament to see which among the 10 is the best and the 2 best would be used to make children
-				for (int i = 0; i < 50; i++) {
+				//Do this for 49 children
+				for (int i = 1; i < 50; i++) {
 					Ai[] tourney = selector(generation);
 					Arrays.sort(tourney, aiSorter);
 					nextgen[i] = mergeAi(tourney[9], tourney[8]);
@@ -394,7 +397,7 @@ public class PlayerSkeleton {
 				
 				printScore(generation);
 				
-				//the 30 worst Ai within the population would get replaced by children
+				//the 50 worst Ai within the population would get replaced by children
 				for (int i = 0; i < 50; i++) {
 					generation[i] = nextgen[i];
 				}
@@ -423,12 +426,11 @@ public class PlayerSkeleton {
 		
 		public void printScore(Ai[] toprint) {
 			for (int i = 90; i < 100; i++) {
-				System.out.println(toprint[i].score);
+				System.out.println(toprint[i].score + " Agent ID = " + toprint[i].uniqueID);
 			}
 			System.out.println(" ");
 			
 			System.out.println("ID for top AI is: " + toprint[99].uniqueID 
-			+ "\nScore = " + toprint[99].score 
 			+ "\ntotalHeightWeight = " + toprint[99].totalHeightWeight 
 			+ "\nmaxHeightWeight = " + toprint[99].maxHeightWeight
 			+ "\nrelativeHeightWeight = " + toprint[99].relativeHeightWeight
@@ -470,7 +472,7 @@ public class PlayerSkeleton {
 		
 		public double mergeValue(double x, double y) {
 			double mutate = Math.random();
-			if (mutate < 0.1) {
+			if (mutate < 0.1) { //10% chance to mutate
 				return randomWeight();
 			}
 			
@@ -486,9 +488,11 @@ public class PlayerSkeleton {
 			ArrayList<Object> list = new ArrayList<>();
 			Ai[] picked = new Ai[10];
 			for (int i = 0; i < 10; i++) {
-				int rng = (int) Math.floor(Math.random()*100);
+				int rng = new Random().nextInt(50) + 50;
+				//int rng = (int) Math.floor(Math.random()*100);
 				while (list.contains(rng)) {
-					rng =  (int) Math.floor(Math.random()*100);
+					//rng =  (int) Math.floor(Math.random()*100);
+					rng = new Random().nextInt(50) + 50;
 				}
 				list.add(rng);
 				picked[i] = population[rng];
