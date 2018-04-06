@@ -154,7 +154,7 @@ public class PlayerSkeleton {
 		State s = new State();
 		new TFrame(s);
 		PlayerSkeleton p = new PlayerSkeleton();
-		//p.ai.trainAi(); //Comment this out to let it play normally.
+		p.ai.trainAi(); //Comment this out to let it play normally.
 		while(!s.hasLost()) {
 			s.makeMove(p.pickMove(s,s.legalMoves(),p.ai));
 			s.draw();
