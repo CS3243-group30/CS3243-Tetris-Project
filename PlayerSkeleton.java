@@ -3,6 +3,8 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Comparator;
 import java.util.Random;
+import java.util.concurrent.ThreadLocalRandom;
+import java.io.*;
 
 public class PlayerSkeleton {
 	public static final int COLS = State.COLS;
@@ -346,7 +348,8 @@ public class PlayerSkeleton {
 		}
 		
 		public double randomWeight() {
-			return Math.random()-0.5; //*2 - 1
+			return ThreadLocalRandom.current().nextDouble(-10, 10);
+			//return (new Random().nextInt(10 + 1 + 10) - 10); //Math.random()*2 - 1;		
 		}
 		
 		//Function for training AI
@@ -356,87 +359,117 @@ public class PlayerSkeleton {
 					return (a1.score).compareTo(a2.score);
 				};
 			};
+			// PrintWriter writer = null;
+			// try {
+			// 	writer = new PrintWriter(new FileWriter("bestpopulation.txt"));
+			// }
+			// catch (IndexOutOfBoundsException e) {
+			// 	System.err.println("Caught IndexOutOfBoundsException: "
+			// 					   +  e.getMessage());
+										 
+			// } catch (IOException e) {
+			// 	System.err.println("Caught IOException: " +  e.getMessage());
+										 
+			// } 
+			// writer.println("This is a test string");
+			// writer.close();
 			
-			//Creates a population of 100 AI
-			Ai[] generation = new Ai[100];
-			
-			for (int i = 0; i < 100; i++) {
-				generation[i] = getRandomAi();
-			}
-			
-			//Let's all of them play
-			for (int i = 0; i < 100; i++) {
-				generation[i].score = playgame(generation[i]);
-				for(int j = 0; j < 5; j++) { // try 5 times
-					int secondTry = playgame(generation[i]);
-					if (secondTry > generation[i].score) {
-						generation[i].score = secondTry;
-					}
-				}
-			}
-			
-			int repeat = 0;
-			while (true) {
-				System.out.println(" ");
-				System.out.println("Generation number: " + repeat);
-				System.out.println(" ");
+			//10 best populations
+			//for(int k = 0; k < 10; k++){
+				//Creates a population of 100 AI
+				Ai[] generation = new Ai[1000];
 				
-				//Create 50 children
-				Ai[] nextgen = new Ai[50];
-				//Keep the winning candidate no matter what
-				nextgen[0] = generation[99];
-				//Randomly select 10 AI from population to have a tournament to see which among the 10 is the best and the 2 best would be used to make children
-				//Do this for 49 children
-				for (int i = 1; i < 50; i++) {
-					Ai[] tourney = selector(generation);
-					Arrays.sort(tourney, aiSorter);
-					nextgen[i] = mergeAi(tourney[9], tourney[8]);
+				for (int i = 0; i < 1000; i++) {
+					generation[i] = getRandomAi();
 				}
 				
-				Arrays.sort(generation, aiSorter);
-				
-				printScore(generation);
-				
-				//the 50 worst Ai within the population would get replaced by children
-				for (int i = 0; i < 50; i++) {
-					generation[i] = nextgen[i];
-				}
-				
-				//play again to get the score for this new population
-				// for (int i = 0; i < 100; i++) {
-				// 	generation[i].score = playgame(generation[i]);
-				// 	int secondTry = playgame(generation[i]);
-				// 	if (secondTry > generation[i].score) {
-				// 		generation[i].score = secondTry;
-				// 	}
-				// }
-				for (int i = 0; i < 100; i++) {
+				//Let's all of them play
+				for (int i = 0; i < 1000; i++) {
 					generation[i].score = playgame(generation[i]);
-					for(int j = 0; j < 5; j++) { // try 5 times
+					for(int j = 0; j < 3; j++) { // try 3 times
 						int secondTry = playgame(generation[i]);
 						if (secondTry > generation[i].score) {
 							generation[i].score = secondTry;
 						}
 					}
 				}
-
-				repeat++;
-			}
+				
+				int repeat = 0;
+				while (repeat != 100) {
+					System.out.println(" ");
+					System.out.println("Generation number: " + repeat);
+					System.out.println(" ");
+					
+					Arrays.sort(generation, aiSorter);
+					printScore(generation);
+					//writeToFile(writer,generation[99], repeat);
+					
+					//Create 50 children
+					Ai[] nextgen = new Ai[300];
+					//Pass on the winning candidate no matter what
+					nextgen[0] = new Ai(generation[999].totalHeightWeight,
+						generation[999].maxHeightWeight,
+						generation[999].relativeHeightWeight,
+						generation[999].linesCompletedWeight,
+						generation[999].holesWeight,
+						generation[999].absTotalDifferenceHeightWeight
+					);
+					//Randomly select 10 AI from population to have a tournament to see which among the 10 is the best and the 2 best would be used to make children
+					//Do this for 49 children
+					for (int i = 1; i < 300; i++) {
+						nextgen[i] = mergeAi(generation[new Random().nextInt(1000)], generation[new Random().nextInt(1000)]); //random merge
+						// Ai[] tourney = selector(generation);
+						// Arrays.sort(tourney, aiSorter);
+						// nextgen[i] = mergeAi(tourney[9], tourney[8]);
+					}
+					
+					//the 50 worst Ai within the population would get replaced by children
+					for (int i = 0; i < 300; i++) {
+						generation[i] = nextgen[i];
+					}
+					
+					//play again to get the score for this new population
+					for (int i = 0; i < 1000; i++) {
+						generation[i].score = playgame(generation[i]);
+						for(int j = 0; j < 3; j++) { // try 3 times
+							int secondTry = playgame(generation[i]);
+							if (secondTry > generation[i].score) {
+								generation[i].score = secondTry;
+							}
+						}
+					}
+					repeat++;
+				}
+				//writeToFile(writer,generation[99], repeat);
+			//}
+			//writer.close();
 		}
 		
 		public void printScore(Ai[] toprint) {
-			for (int i = 90; i < 100; i++) {
+			for (int i = 990; i < 1000; i++) {
 				System.out.println(toprint[i].score + " Agent ID = " + toprint[i].uniqueID);
 			}
 			System.out.println(" ");
 			
-			System.out.println("ID for top AI is: " + toprint[99].uniqueID 
-			+ "\ntotalHeightWeight = " + toprint[99].totalHeightWeight 
-			+ "\nmaxHeightWeight = " + toprint[99].maxHeightWeight
-			+ "\nrelativeHeightWeight = " + toprint[99].relativeHeightWeight
-			+ "\nlinesCompletedWeight = " + toprint[99].linesCompletedWeight
-			+ "\nholesWeight = " + toprint[99].holesWeight
-			+ "\nabsTotalDifferenceHeightWeight = " + toprint[99].absTotalDifferenceHeightWeight);
+			System.out.println("ID for top AI is: " + toprint[999].uniqueID 
+			+ "\ntotalHeightWeight = " + toprint[999].totalHeightWeight 
+			+ "\nmaxHeightWeight = " + toprint[999].maxHeightWeight
+			+ "\nrelativeHeightWeight = " + toprint[999].relativeHeightWeight
+			+ "\nlinesCompletedWeight = " + toprint[999].linesCompletedWeight
+			+ "\nholesWeight = " + toprint[999].holesWeight
+			+ "\nabsTotalDifferenceHeightWeight = " + toprint[999].absTotalDifferenceHeightWeight);
+		}
+
+		public void writeToFile(PrintWriter writer, Ai best, int run) {
+			writer.println("This is the " + run + " round");
+			writer.println(best.uniqueID);
+			writer.println("totalHeightWeight = " + best.totalHeightWeight);
+			writer.println("maxHeightWeight = " + best.maxHeightWeight);
+			writer.println("relativeHeightWeight = " + best.relativeHeightWeight);
+			writer.println("linesCompletedWeight = " + best.linesCompletedWeight);
+			writer.println("holesWeight = " + best.holesWeight);
+			writer.println("absTotalDifferenceHeightWeight = " + best.absTotalDifferenceHeightWeight);
+			writer.println("");
 		}
 		
 		//Creates a child Ai where the values are based off parents
@@ -488,11 +521,11 @@ public class PlayerSkeleton {
 			ArrayList<Object> list = new ArrayList<>();
 			Ai[] picked = new Ai[10];
 			for (int i = 0; i < 10; i++) {
-				int rng = new Random().nextInt(50) + 50;
-				//int rng = (int) Math.floor(Math.random()*100);
+				//int rng = new Random().nextInt(50) + 50;
+				int rng = (int) Math.floor(Math.random()*100);
 				while (list.contains(rng)) {
-					//rng =  (int) Math.floor(Math.random()*100);
-					rng = new Random().nextInt(50) + 50;
+					rng =  (int) Math.floor(Math.random()*100);
+					//rng = new Random().nextInt(50) + 50;
 				}
 				list.add(rng);
 				picked[i] = population[rng];
